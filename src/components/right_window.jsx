@@ -24,26 +24,6 @@ const Tasks = () => {
             render: (task) => task.description,
         },
     ];
-    //   [
-    //     {
-    //       "id": 0,
-    //       "task": {
-    //         "id": 0,
-    //         "task_name": "string",
-    //         "task_object": 1,
-    //         "object_name": "string",
-    //         "description": "string",
-    //         "object_reference": "string",
-    //         "variant": 0,
-    //         "skills": [
-    //           0
-    //         ]
-    //       },
-    //       "attempts": 9223372036854776000,
-    //       "is_completed": true,
-    //       "user": "string"
-    //     }
-    //   ]
 
     if (taskusers) {
         return <Table dataSource={taskusers} columns={columns} />;
@@ -66,35 +46,28 @@ const Mistakes = () => {
         3: 'Лексическая ошибка',
     }
 
+    const columns = [
+        {
+            title: "Name",
+            dataIndex: "task",
+            key: "task",
+            render: (task) => task.name,
+        },
+        {
+            title: "tip",
+            dataIndex: "tip",
+            key: "tip",
+        },
+    ];  
+
     const items = (mistakes || []).map((mistake) => ({
         key: mistake.id.toString(),
         label: mistakeTypeLabels[mistake.mistake_type],
-        children: <p>{text}</p>,
+        children: <p>{"text"}</p>,
     }));
 
-    //   [
-    //     {
-    //       "id": 0,
-    //       "task": {
-    //         "id": 0,
-    //         "task_name": "string",
-    //         "task_object": 1,
-    //         "object_name": "string",
-    //         "description": "string",
-    //         "object_reference": "string",
-    //         "variant": 0,
-    //         "skills": [
-    //           0
-    //         ]
-    //       },
-    //       "attempts": 9223372036854776000,
-    //       "is_completed": true,
-    //       "user": "string"
-    //     }
-    //   ]
-
     if (mistakes) {
-        return <Table dataSource={taskusers} columns={columns} />;
+        return <Table dataSource={mistakes} columns={columns} />;
     } else {
         return <Skeleton active />;
     }
