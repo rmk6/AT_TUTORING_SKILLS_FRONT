@@ -1,31 +1,100 @@
-import {
-  Collapse,
-  Typography,
-  Skeleton,
-  message,
-  theme
-} from "antd";
+import { Collapse, Typography, Skeleton, message, theme, Space } from "antd";
 import { useState, useEffect } from "react";
-import { getTaskUsers } from "./methods/get";
-import { CheckCircleOutlined, ClockCircleOutlined, CaretRightOutlined } from "@ant-design/icons";
+import { getTaskUsers, getUsers } from "./methods/get";
+import {
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CaretRightOutlined,
+} from "@ant-design/icons";
 import { useSearchParams, useLocation } from "react-router";
 import { TASK_OBJECT_SM } from "../global";
 
 const { useToken } = theme;
 const { Title, Text } = Typography;
 
-export const VariantSM = () => {
+export const VariantDescription = () => {
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
+  const { token } = useToken();
+  const authToken = searchParams.get("auth_token");
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        await getUsers(setUserData, authToken);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        message.error("Ошибка загрузки данных пользователя");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (authToken) {
+      fetchUserData();
+    } else {
+      message.error("Отсутствует auth_token в URL");
+      setLoading(false);
+    }
+  }, [authToken]);
+
+  if (loading) {
+    return <Skeleton active paragraph={{ rows: 2 }} />;
+  }
+
+  if (!authToken) {
+    return (
+      <div style={{ padding: "12px", textAlign: "center" }}>
+        <Text type="danger">
+          Необходимо указать auth_token в параметрах URL
+        </Text>
+      </div>
+    );
+  }
+
+  if (!userData || userData.length === 0) {
+    return (
+      <div style={{ padding: "12px" }}>
+        <Text style={{ fontSize: "0.95em" }}>
+          Вариант не назначен или данные отсутствуют
+        </Text>
+      </div>
+    );
+  }
+
+  const variant = userData[0]?.variant;
+
+  return (
+    <div
+      style={{
+        padding: "12px 16px",
+        marginBottom: "8px",
+        marginTop: 0,  
+        background: token.colorBgContainer,
+        borderRadius: token.borderRadiusLG,
+        border: `1px solid ${token.colorBorderSecondary}`,
+      }}
+    >
+      <Title level={4} style={{ marginBottom: 8, marginTop: 0,  fontSize: "1em" }}>
+        Вам назначен следующий вариант : "{variant?.name || "Не назначен"}"
+      </Title>
+      <Text style={{ fontSize: "0.95em" }}>
+        {variant?.sm_description || "Описание варианта отсутствует"}
+      </Text>
+    </div>
+  );
+};
+
+export const TasksSM = () => {
   const [taskusers, setTaskUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { token } = useToken();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const taskObject = TASK_OBJECT_SM
-  
-  // Получаем номер варианта из URL
-  const authToken = searchParams.get("auth_token"); // Добавляем получение auth_token
-  const variantNumber = location.pathname.split('/').pop() || '1';
-
+  const taskObject = TASK_OBJECT_SM;
+  const authToken = searchParams.get("auth_token");
+  const variantNumber = location.pathname.split("/").pop() || "1";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,19 +108,25 @@ export const VariantSM = () => {
         setLoading(false);
       }
     };
-
-    fetchData();
-  }, [taskObject]);
+    if (authToken) {
+      fetchData();
+    } else {
+      message.error("Отсутствует auth_token в URL");
+      setLoading(false);
+    }
+  }, [taskObject, authToken]);
 
   const renderQuotedText = (text) => {
     if (!text) return null;
     const parts = text.split(/"([^"]*)"/);
     return (
-      <span style={{ 
-        whiteSpace: "normal", 
-        wordWrap: "break-word",
-        fontSize: "0.9em"
-      }}>
+      <span
+        style={{
+          whiteSpace: "normal",
+          wordWrap: "break-word",
+          fontSize: "0.95em",
+        }}
+      >
         {parts.map((part, index) =>
           index % 2 === 1 ? (
             <strong
@@ -60,7 +135,7 @@ export const VariantSM = () => {
                 display: "inline",
                 wordBreak: "break-word",
                 hyphens: "auto",
-                fontSize: "inherit"
+                fontSize: "inherit",
               }}
             >
               "{part}"
@@ -74,92 +149,170 @@ export const VariantSM = () => {
   };
 
   const panelStyle = {
-    marginBottom: 12,
+    marginBottom: 8,
     background: token.colorFillAlter,
-    borderRadius: token.borderRadiusLG,
+    borderRadius: token.borderRadius,
     border: "none",
-    fontSize: token.fontSizeLG,
+    fontSize: "0.95em",
   };
 
   const getTaskItems = () => {
-    return taskusers.map((item, index) => ({
-      key: index.toString(),
-      label: (
-        <div style={{ 
-          display: "flex", 
-          alignItems: "center", 
-          gap: 8,
-          fontSize: "0.9em"
-        }}>
-          {item.is_completed ? (
-            <CheckCircleOutlined style={{ 
-              color: "#52c41a",
-              fontSize: "0.9em"
-            }} />
-          ) : (
-            <ClockCircleOutlined style={{ 
-              color: "#d9d9d9",
-              fontSize: "0.9em"
-            }} />
-          )}
-          {renderQuotedText(item.task?.task_name)}
-          <span style={{ 
-            marginLeft: "auto", 
-            color: token.colorTextSecondary,
-            whiteSpace: "nowrap",
-            fontSize: "0.9em"
-          }}>
-            Попыток: {item.attempts}
-          </span>
-        </div>
-      ),
-      children: (
-        <div style={{ 
-          padding: "8px 16px",
-          fontSize: "0.9em"
-        }}>
-          <p><strong>Описание:</strong> {item.task?.description || 'Нет описания'}</p>
-        </div>
-      ),
-      style: panelStyle,
-    }));
+    return taskusers.map((item, index) => {
+      const objectReference = item.task?.object_reference;
+      const displayReference =
+        typeof objectReference === "string"
+          ? objectReference
+          : objectReference?.url || objectReference?.href || "";
+      return {
+        key: index.toString(),
+        label: (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: "0.95em",
+            }}
+          >
+            {item.is_completed ? (
+              <CheckCircleOutlined
+                style={{
+                  color: token.colorSuccess,
+                  fontSize: "0.95em",
+                }}
+              />
+            ) : (
+              <ClockCircleOutlined
+                style={{
+                  color: token.colorTextDisabled,
+                  fontSize: "0.95em",
+                }}
+              />
+            )}
+            {renderQuotedText(item.task?.task_name)}
+            <span
+              style={{
+                marginLeft: "auto",
+                color: token.colorTextSecondary,
+                whiteSpace: "nowrap",
+                fontSize: "0.95em",
+              }}
+            >
+              Попыток: {item.attempts}
+            </span>
+          </div>
+        ),
+        children: (
+          <div
+            style={{
+              padding: "8px 12px",
+              fontSize: "0.95em",
+            }}
+          >
+            <p>
+              <strong>Описание:</strong>{" "}
+              {item.task?.description || "Нет описания"}
+            </p>
+            {displayReference && (
+              <p style={{ marginBottom: 0 }}>
+                <strong>Ссылка на материал:</strong>{" "}
+                <a
+                  href={displayReference}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ wordBreak: "break-all" }}
+                >
+                  {displayReference}
+                </a>
+              </p>
+            )}
+          </div>
+        ),
+        style: panelStyle,
+      };
+    });
   };
 
   if (loading) {
-    return <Skeleton active paragraph={{ rows: 6 }} />;
+    return <Skeleton active paragraph={{ rows: 4 }} />;
+  }
+
+  if (!authToken) {
+    return (
+      <div style={{ padding: "12px", textAlign: "center" }}>
+        <Text type="danger">
+          Необходимо указать auth_token в параметрах URL
+        </Text>
+      </div>
+    );
+  }
+
+  if (!taskusers || taskusers.length === 0) {
+    return (
+      <div
+        style={{
+          padding: "12px 16px",
+          background: token.colorBgContainer,
+          borderRadius: token.borderRadiusLG,
+          border: `1px solid ${token.colorBorderSecondary}`,
+        }}
+      >
+        <Text style={{ fontSize: "0.95em" }}>
+          Нет доступных заданий для этого варианта
+        </Text>
+      </div>
+    );
   }
 
   return (
-    <div style={{ padding: "16px" }}>
-      <Title level={3} style={{ marginBottom: 24 }}>
-        Вариант {variantNumber}
+    <div
+      style={{
+        padding: "12px 16px",
+        background: token.colorBgContainer,
+        borderRadius: token.borderRadiusLG,
+        border: `1px solid ${token.colorBorderSecondary}`,
+      }}
+    >
+      <Title level={3} style={{ marginBottom: 8,marginTop: 0,   fontSize: "1em" }}>
+        Задания:
       </Title>
-      
-      <Text style={{ 
-        display: 'block', 
-        marginBottom: 24,
-        fontSize: "0.9em"
-      }}>
-        Здесь находится описание заданий варианта. Выполните все задания последовательно.
-      </Text>
 
-      {taskusers?.length > 0 ? (
-        <Collapse
-          bordered={false}
-          expandIcon={({ isActive }) => (
-            <CaretRightOutlined rotate={isActive ? 90 : 0} />
-          )}
-          style={{ 
-            background: token.colorBgContainer,
-            fontSize: "0.9em"
-          }}
-          items={getTaskItems()}
-        />
-      ) : (
-        <Text style={{ fontSize: "0.9em" }}>
-          Нет доступных заданий для этого варианта
-        </Text>
-      )}
+      <Collapse
+        bordered={false}
+        expandIcon={({ isActive }) => (
+          <CaretRightOutlined rotate={isActive ? 90 : 0} />
+        )}
+        style={{
+          background: "transparent",
+          fontSize: "0.95em",
+        }}
+        items={getTaskItems()}
+      />
+    </div>
+  );
+};
+
+export const VariantSM = () => {
+  const { token } = useToken();
+  return (
+    <div
+      style={{
+        maxWidth: "800px",
+        margin: "0 auto",
+        padding: "16px",
+      }}
+    >
+      <Space
+        direction="vertical"
+        size="small"
+        style={{
+          width: "100%",
+          gap: "12px !important",
+        }}
+      >
+        <VariantDescription />
+        <TasksSM />
+      </Space>
     </div>
   );
 };
