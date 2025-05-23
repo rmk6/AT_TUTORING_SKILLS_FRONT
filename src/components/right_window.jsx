@@ -25,6 +25,7 @@ import {
   CloseCircleOutlined,
 } from "@ant-design/icons";
 import { useMatches, useNavigate, useSearchParams } from "react-router";
+import SkillsGraph from "./skills_graph";
 // import { ClockCircleOutlined, CheckCircleOutlined, CaretRightOutlined } from '@ant-design/icons';
 const { useToken } = theme;
 
@@ -338,6 +339,11 @@ export const Window = () => {
       label: "Ошибки",
       children: <MistakesList />,
     },
+    {
+      key: "skills",
+      label: "Текущая модель обучаемого",
+      children: <SkillsGraph />,
+    }
   ];
   debugger;
 

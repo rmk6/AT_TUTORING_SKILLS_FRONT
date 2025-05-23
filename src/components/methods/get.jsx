@@ -57,3 +57,4 @@ export const getUsers = async (setUsers, auth_token) => {
     setUsers(data);
   }
 };
+

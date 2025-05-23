@@ -18,6 +18,10 @@ const router = createBrowserRouter([
     element: <Window />,
   },
   {
+    path: "/skills",
+    element: <Window />,
+  },
+  {
     path: "/variant_kb",
     element: <VariantKB />,
   },

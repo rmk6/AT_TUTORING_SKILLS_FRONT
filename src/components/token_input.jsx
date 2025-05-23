@@ -7,9 +7,9 @@ export default function Login() {
   const [form] = Form.useForm();
 
   const login = () => {
-    const token = form.getFieldValue("token");
+    const token = form.getFieldValue("auth_token");
     if (token) {
-      searchParams.set("token", token);
+      searchParams.set("auth_token", token);
       navigate(`/tasks?${searchParams.toString()}`);
     }
   };
@@ -18,7 +18,7 @@ export default function Login() {
     <Form form={form} layout="inline">
       <Form.Item
         label="Ключ доступа"
-        name="token"
+        name="auth_token"
         rules={[{ required: true, message: "Укажите ключ доступа" }]}
       >
         <Input placeholder="Введите ключ доступа" />
